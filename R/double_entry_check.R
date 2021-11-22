@@ -99,8 +99,14 @@ if (sum(!(names(x) %in% names(y))) > 0 | sum(!(names(y) %in%
     error_on_match <- inner_join(x_long, y_long, by = c("id", "field")) %>% filter(x !=
                                                                      y | is.na(x) & !is.na(y) | !is.na(x) & is.na(y))
 
-    # Combine mismatched values from matched ids with unmatched ids-values
-    error_table <- bind_rows(error_on_match, in_y_not_x, in_x_not_y) %>%
+     if (sum(!(x_id$id %in% y_id$id)) > 0 | sum(!(y_id$id %in% x_id$id)) >
+        0) {
+      # Combine mismatched values from matched ids with unmatched ids-values
+      error_table <- bind_rows(error_on_match, in_y_not_x, in_x_not_y)
+    } else {
+      error_table <- error_on_match
+    }
+    error_table <- error_table %>%
         # Add the columns for the id columns back to the dataframe and remove concatenated version
         left_join(all_id, by = "id") %>%
         select(-id) %>%
